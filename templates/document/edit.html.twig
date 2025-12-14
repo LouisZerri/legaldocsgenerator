@@ -20,7 +20,7 @@
                 {% for variable in document.template.variablesJson %}
                     <div>
                         <label for="{{ variable.name }}" class="block text-sm font-medium text-gray-700 mb-1">
-                            {{ variable.label }}
+                            {{ variable.name|replace({'_': ' '})|title }}
                             {% if variable.required %}<span class="text-red-500">*</span>{% endif %}
                         </label>
                         
