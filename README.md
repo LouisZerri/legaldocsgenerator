@@ -21,7 +21,7 @@ Plateforme de génération de documents juridiques avec assistance IA, workflow 
 - **Amélioration de documents** par IA
 - **Génération de clauses** juridiques
 - **Reformulation** et **résumé** automatique
-- Powered by **Ollama** avec le modèle **Mistral**
+- Powered by **OpenAI**
 
 ### Multi-organisations
 - **Isolation des données** par organisation
@@ -47,7 +47,7 @@ Plateforme de génération de documents juridiques avec assistance IA, workflow 
 | Queue | RabbitMQ |
 | CSS | TailwindCSS 4 |
 | Bundler | Webpack Encore |
-| IA | Ollama (Mistral) |
+| IA | OpenAI |
 | PDF | DomPDF |
 | Conteneurisation | Docker Compose |
 
@@ -55,7 +55,6 @@ Plateforme de génération de documents juridiques avec assistance IA, workflow 
 
 - Docker & Docker Compose
 - Git
-- 8 Go de RAM minimum (pour Mistral)
 
 ## 🚀 Installation
 
@@ -107,8 +106,6 @@ docker exec -it legaldocs_ollama ollama pull mistral
 
 | Rôle | Email | Mot de passe |
 |------|-------|--------------|
-| Super Admin | superadmin@legaldocs.fr | password |
-| Admin Org | admin@cabinet-martin.fr | password |
 | Éditeur | marie@cabinet-martin.fr | password |
 | Validateur | pierre@cabinet-martin.fr | password |
 | Utilisateur | sophie@startup-innov.fr | password |
@@ -120,7 +117,7 @@ legal-docs-generator/
 ├── assets/                 # Assets frontend (JS, CSS)
 ├── config/                 # Configuration Symfony
 ├── docker/                 # Configuration Docker
-│   ├── nginx/
+│   ├── apache/
 │   └── php/
 ├── migrations/             # Migrations Doctrine
 ├── public/                 # Point d'entrée web
@@ -177,19 +174,6 @@ docker exec -it legaldocs_app php bin/console doctrine:migrations:migrate
 
 # Recharger les fixtures
 docker exec -it legaldocs_app php bin/console doctrine:fixtures:load
-```
-
-### IA / Ollama
-
-```bash
-# Lister les modèles installés
-docker exec -it legaldocs_ollama ollama list
-
-# Installer un modèle
-docker exec -it legaldocs_ollama ollama pull mistral
-
-# Tester un modèle
-docker exec -it legaldocs_ollama ollama run mistral "Bonjour"
 ```
 
 ## 📊 Workflow des documents
@@ -260,16 +244,6 @@ docker exec -it legaldocs_app npm run dev
 # Puis Ctrl+Shift+R dans le navigateur
 ```
 
-### L'IA ne répond pas
-
-```bash
-# Vérifier qu'Ollama fonctionne
-docker exec -it legaldocs_ollama ollama list
-
-# Redémarrer Ollama si nécessaire
-docker restart legaldocs_ollama
-```
-
 ### Erreur de base de données
 
 ```bash
@@ -287,4 +261,4 @@ Développé par Louis Zerri
 
 ---
 
-**LegalDocs Generator** - Simplifiez la création de vos documents juridiques 📄✨
+**LegalDocs Generator** - Simplifiez la création de vos documents juridiques

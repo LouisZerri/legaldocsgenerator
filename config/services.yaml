@@ -28,4 +28,4 @@ services:
 
     App\Service\AiService:
         arguments:
-            $ollamaHost: '%env(OLLAMA_HOST)%'
+            $openaiApiKey: '%env(OPENAI_API_KEY)%'

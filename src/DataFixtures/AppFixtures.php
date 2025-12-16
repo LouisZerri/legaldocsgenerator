@@ -39,26 +39,16 @@ class AppFixtures extends Fixture
 
         // ========== UTILISATEURS ==========
 
-        // Super Admin (sans organisation)
-        $superAdmin = new User();
-        $superAdmin->setEmail('superadmin@legaldocs.fr');
-        $superAdmin->setName('Super Admin');
-        $superAdmin->setRoles(['ROLE_SUPER_ADMIN']);
-        $superAdmin->setPassword($this->passwordHasher->hashPassword($superAdmin, 'password'));
-        $superAdmin->setCreatedAt(new \DateTimeImmutable('-6 months'));
-        $manager->persist($superAdmin);
+        // Super Admin - Louis (compte personnel, pas affiché sur login)
+        $louisAdmin = new User();
+        $louisAdmin->setEmail('l.zerri@gmail.com');
+        $louisAdmin->setName('Louis Zerri');
+        $louisAdmin->setRoles(['ROLE_SUPER_ADMIN']);
+        $louisAdmin->setPassword($this->passwordHasher->hashPassword($louisAdmin, 'jeux video'));
+        $louisAdmin->setCreatedAt(new \DateTimeImmutable('-6 months'));
+        $manager->persist($louisAdmin);
 
-        // Admin Org (LegalDocs Corp)
-        $admin = new User();
-        $admin->setEmail('admin@legaldocs.fr');
-        $admin->setName('Admin LegalDocs');
-        $admin->setRoles(['ROLE_ADMIN_ORG']);
-        $admin->setOrganization($org1);
-        $admin->setPassword($this->passwordHasher->hashPassword($admin, 'password'));
-        $admin->setCreatedAt(new \DateTimeImmutable('-6 months'));
-        $manager->persist($admin);
-
-        // Éditeur (LegalDocs Corp)
+        // Éditeur (LegalDocs Corp) - Compte démo
         $editor = new User();
         $editor->setEmail('editeur@legaldocs.fr');
         $editor->setName('Marie Dupont');
@@ -68,7 +58,7 @@ class AppFixtures extends Fixture
         $editor->setCreatedAt(new \DateTimeImmutable('-5 months'));
         $manager->persist($editor);
 
-        // Validateur (LegalDocs Corp)
+        // Validateur (LegalDocs Corp) - Compte démo
         $validator = new User();
         $validator->setEmail('juriste@legaldocs.fr');
         $validator->setName('Pierre Martin');
@@ -78,7 +68,7 @@ class AppFixtures extends Fixture
         $validator->setCreatedAt(new \DateTimeImmutable('-4 months'));
         $manager->persist($validator);
 
-        // User simple (Cabinet Martin)
+        // User simple (Cabinet Martin) - Compte démo
         $user = new User();
         $user->setEmail('user@legaldocs.fr');
         $user->setName('Sophie Laurent');
@@ -88,7 +78,7 @@ class AppFixtures extends Fixture
         $user->setCreatedAt(new \DateTimeImmutable('-3 months'));
         $manager->persist($user);
 
-        // User Startup
+        // User Startup - Compte démo
         $userStartup = new User();
         $userStartup->setEmail('startup@legaldocs.fr');
         $userStartup->setName('Lucas Bernard');
@@ -105,7 +95,7 @@ class AppFixtures extends Fixture
         $templateNda->setName('Accord de Confidentialité (NDA)');
         $templateNda->setDescription('Accord de confidentialité bilatéral pour protéger les informations sensibles.');
         $templateNda->setVisibility('global');
-        $templateNda->setCreatedBy($superAdmin);
+        $templateNda->setCreatedBy($louisAdmin);
         $templateNda->setCreatedAt(new \DateTimeImmutable('-6 months'));
         $templateNda->setBodyMarkdown(<<<'MARKDOWN'
 # Accord de Confidentialité
@@ -124,11 +114,11 @@ Ci-après dénommée « **La Partie Réceptrice** »
 
 ## Article 1 - Objet
 
-Le présent accord a pour objet de définir les conditions dans lesquelles la Partie Réceptrice s'engage à maintenir confidentielles les informations qui lui seront communiquées par la Partie Divulgatrice dans le cadre de {{objet_collaboration}}.
+Le présent accord a pour objet de définir les conditions dans lesquelles la Partie Réceptrice s'engage à maintenir confidentielles les informations qui lui seront communiquées par la Partie Divulgatrice dans le cadre de {{objet_collaboration:textarea}}.
 
 ## Article 2 - Durée de confidentialité
 
-Les obligations de confidentialité prévues au présent accord resteront en vigueur pendant une durée de **{{duree_confidentialite}} ans** à compter de la date de signature.
+Les obligations de confidentialité prévues au présent accord resteront en vigueur pendant une durée de **{{duree_confidentialite:number}} ans** à compter de la date de signature.
 
 ## Article 3 - Obligations
 
@@ -136,21 +126,21 @@ La Partie Réceptrice s'engage à :
 - Ne pas divulguer les Informations Confidentielles à des tiers
 - Protéger les Informations Confidentielles avec le même degré de précaution que ses propres informations confidentielles
 
-Fait à {{lieu_signature}}, le {{date_signature}}
+Fait à {{lieu_signature}}, le {{date_signature:date}}
 MARKDOWN);
         $templateNda->setVariablesJson([
-            ['name' => 'partie_1_nom', 'type' => 'text', 'required' => true],
-            ['name' => 'partie_1_forme_juridique', 'type' => 'text', 'required' => true],
-            ['name' => 'partie_1_adresse', 'type' => 'text', 'required' => true],
-            ['name' => 'partie_1_representant', 'type' => 'text', 'required' => true],
-            ['name' => 'partie_2_nom', 'type' => 'text', 'required' => true],
-            ['name' => 'partie_2_forme_juridique', 'type' => 'text', 'required' => true],
-            ['name' => 'partie_2_adresse', 'type' => 'text', 'required' => true],
-            ['name' => 'partie_2_representant', 'type' => 'text', 'required' => true],
-            ['name' => 'objet_collaboration', 'type' => 'textarea', 'required' => true],
-            ['name' => 'duree_confidentialite', 'type' => 'number', 'required' => true],
-            ['name' => 'lieu_signature', 'type' => 'text', 'required' => true],
-            ['name' => 'date_signature', 'type' => 'date', 'required' => true],
+            ['name' => 'partie_1_nom', 'type' => 'text', 'required' => true, 'label' => 'Nom partie 1'],
+            ['name' => 'partie_1_forme_juridique', 'type' => 'text', 'required' => true, 'label' => 'Forme juridique partie 1'],
+            ['name' => 'partie_1_adresse', 'type' => 'textarea', 'required' => true, 'label' => 'Adresse partie 1'],
+            ['name' => 'partie_1_representant', 'type' => 'text', 'required' => true, 'label' => 'Représentant partie 1'],
+            ['name' => 'partie_2_nom', 'type' => 'text', 'required' => true, 'label' => 'Nom partie 2'],
+            ['name' => 'partie_2_forme_juridique', 'type' => 'text', 'required' => true, 'label' => 'Forme juridique partie 2'],
+            ['name' => 'partie_2_adresse', 'type' => 'textarea', 'required' => true, 'label' => 'Adresse partie 2'],
+            ['name' => 'partie_2_representant', 'type' => 'text', 'required' => true, 'label' => 'Représentant partie 2'],
+            ['name' => 'objet_collaboration', 'type' => 'textarea', 'required' => true, 'label' => 'Objet de la collaboration'],
+            ['name' => 'duree_confidentialite', 'type' => 'number', 'required' => true, 'label' => 'Durée de confidentialité (années)'],
+            ['name' => 'lieu_signature', 'type' => 'text', 'required' => true, 'label' => 'Lieu de signature'],
+            ['name' => 'date_signature', 'type' => 'date', 'required' => true, 'label' => 'Date de signature'],
         ]);
         $manager->persist($templateNda);
 
@@ -159,15 +149,15 @@ MARKDOWN);
         $templateCgv->setName('Conditions Générales de Vente');
         $templateCgv->setDescription('CGV standard pour prestations de services.');
         $templateCgv->setVisibility('global');
-        $templateCgv->setCreatedBy($superAdmin);
+        $templateCgv->setCreatedBy($louisAdmin);
         $templateCgv->setCreatedAt(new \DateTimeImmutable('-5 months'));
         $templateCgv->setBodyMarkdown(<<<'MARKDOWN'
 # Conditions Générales de Vente
 
 ## Article 1 - Identification du prestataire
 
-**{{entreprise_nom}}** {{entreprise_forme_juridique}} au capital de {{entreprise_capital}} €
-Siège social : {{entreprise_adresse}}
+**{{entreprise_nom}}** {{entreprise_forme_juridique}} au capital de {{entreprise_capital:number}} €
+Siège social : {{entreprise_adresse:textarea}}
 SIRET : {{entreprise_siret}}
 
 ## Article 2 - Objet
@@ -176,26 +166,28 @@ Les présentes CGV régissent les relations contractuelles entre {{entreprise_no
 
 ## Article 3 - Prix
 
-Les prix sont exprimés en euros et s'entendent {{prix_ht_ttc}}.
-Tarif horaire : {{tarif_horaire}} €
+Les prix sont exprimés en euros et s'entendent {{prix_ht_ttc:select:HT,TTC}}.
+Tarif horaire : {{tarif_horaire:number}} €
 
 ## Article 4 - Paiement
 
-Le paiement est dû à {{delai_paiement}} jours à compter de la date de facturation.
+Le paiement est dû à {{delai_paiement:number}} jours à compter de la date de facturation.
+Mode de paiement accepté : {{mode_paiement:select:Virement,Chèque,Carte bancaire,Espèces}}
 
-Fait le {{date_redaction}}
+Fait le {{date_redaction:date}}
 MARKDOWN);
         $templateCgv->setVariablesJson([
-            ['name' => 'entreprise_nom', 'type' => 'text', 'required' => true],
-            ['name' => 'entreprise_forme_juridique', 'type' => 'text', 'required' => true],
-            ['name' => 'entreprise_capital', 'type' => 'number', 'required' => true],
-            ['name' => 'entreprise_adresse', 'type' => 'text', 'required' => true],
-            ['name' => 'entreprise_siret', 'type' => 'text', 'required' => true],
-            ['name' => 'type_prestation', 'type' => 'text', 'required' => true],
-            ['name' => 'prix_ht_ttc', 'type' => 'select', 'required' => true, 'options' => ['HT', 'TTC']],
-            ['name' => 'tarif_horaire', 'type' => 'number', 'required' => true],
-            ['name' => 'delai_paiement', 'type' => 'number', 'required' => true],
-            ['name' => 'date_redaction', 'type' => 'date', 'required' => true],
+            ['name' => 'entreprise_nom', 'type' => 'text', 'required' => true, 'label' => 'Nom de l\'entreprise'],
+            ['name' => 'entreprise_forme_juridique', 'type' => 'text', 'required' => true, 'label' => 'Forme juridique'],
+            ['name' => 'entreprise_capital', 'type' => 'number', 'required' => true, 'label' => 'Capital social (€)'],
+            ['name' => 'entreprise_adresse', 'type' => 'textarea', 'required' => true, 'label' => 'Adresse du siège'],
+            ['name' => 'entreprise_siret', 'type' => 'text', 'required' => true, 'label' => 'Numéro SIRET'],
+            ['name' => 'type_prestation', 'type' => 'text', 'required' => true, 'label' => 'Type de prestation'],
+            ['name' => 'prix_ht_ttc', 'type' => 'select', 'required' => true, 'label' => 'Prix HT ou TTC', 'options' => ['HT', 'TTC']],
+            ['name' => 'tarif_horaire', 'type' => 'number', 'required' => true, 'label' => 'Tarif horaire (€)'],
+            ['name' => 'delai_paiement', 'type' => 'number', 'required' => true, 'label' => 'Délai de paiement (jours)'],
+            ['name' => 'mode_paiement', 'type' => 'select', 'required' => true, 'label' => 'Mode de paiement', 'options' => ['Virement', 'Chèque', 'Carte bancaire', 'Espèces']],
+            ['name' => 'date_redaction', 'type' => 'date', 'required' => true, 'label' => 'Date de rédaction'],
         ]);
         $manager->persist($templateCgv);
 
@@ -205,7 +197,7 @@ MARKDOWN);
         $templateSaas->setDescription('Contrat de licence logicielle en mode SaaS.');
         $templateSaas->setVisibility('private');
         $templateSaas->setOrganization($org1);
-        $templateSaas->setCreatedBy($admin);
+        $templateSaas->setCreatedBy($editor);
         $templateSaas->setCreatedAt(new \DateTimeImmutable('-4 months'));
         $templateSaas->setBodyMarkdown(<<<'MARKDOWN'
 # Contrat de Licence SaaS
@@ -216,21 +208,23 @@ Le présent contrat a pour objet de définir les conditions d'utilisation de la 
 
 ## Article 2 - Durée
 
-Le contrat est conclu pour une durée de **{{duree_contrat}} mois** à compter du {{date_debut}}.
+Le contrat est conclu pour une durée de **{{duree_contrat:number}} mois** à compter du {{date_debut:date}}.
 
 ## Article 3 - Tarification
 
-L'abonnement mensuel est fixé à **{{montant_mensuel}} €** HT.
+L'abonnement mensuel est fixé à **{{montant_mensuel:number}} €** HT.
+Mode de paiement : {{mode_paiement:select:Virement,Prélèvement automatique,Carte bancaire}}
 
 ## Article 4 - Support
 
 Le client bénéficie d'un support technique par email et téléphone, du lundi au vendredi de 9h à 18h.
 MARKDOWN);
         $templateSaas->setVariablesJson([
-            ['name' => 'client_nom', 'type' => 'text', 'required' => true],
-            ['name' => 'duree_contrat', 'type' => 'number', 'required' => true],
-            ['name' => 'date_debut', 'type' => 'date', 'required' => true],
-            ['name' => 'montant_mensuel', 'type' => 'number', 'required' => true],
+            ['name' => 'client_nom', 'type' => 'text', 'required' => true, 'label' => 'Nom du client'],
+            ['name' => 'duree_contrat', 'type' => 'number', 'required' => true, 'label' => 'Durée du contrat (mois)'],
+            ['name' => 'date_debut', 'type' => 'date', 'required' => true, 'label' => 'Date de début'],
+            ['name' => 'montant_mensuel', 'type' => 'number', 'required' => true, 'label' => 'Montant mensuel (€)'],
+            ['name' => 'mode_paiement', 'type' => 'select', 'required' => true, 'label' => 'Mode de paiement', 'options' => ['Virement', 'Prélèvement automatique', 'Carte bancaire']],
         ]);
         $manager->persist($templateSaas);
 
@@ -249,33 +243,38 @@ Entre l'employeur **{{employeur_nom}}** et le salarié **{{salarie_nom}}**.
 
 ## Article 1 - Engagement
 
-Le salarié est engagé en qualité de **{{poste}}** à compter du {{date_debut}}.
+Le salarié est engagé en qualité de **{{poste}}** à compter du {{date_debut:date}}.
 
 ## Article 2 - Rémunération
 
-Le salaire brut mensuel est fixé à **{{salaire_brut}} €**.
+Le salaire brut mensuel est fixé à **{{salaire_brut:number}} €**.
 
 ## Article 3 - Durée du travail
 
-La durée hebdomadaire de travail est de **{{heures_semaine}} heures**.
+La durée hebdomadaire de travail est de **{{heures_semaine:number}} heures**.
+
+## Article 4 - Période d'essai
+
+La période d'essai est de **{{periode_essai:select:1 mois,2 mois,3 mois,4 mois}}**.
 MARKDOWN);
         $templateTravail->setVariablesJson([
-            ['name' => 'employeur_nom', 'type' => 'text', 'required' => true],
-            ['name' => 'salarie_nom', 'type' => 'text', 'required' => true],
-            ['name' => 'poste', 'type' => 'text', 'required' => true],
-            ['name' => 'date_debut', 'type' => 'date', 'required' => true],
-            ['name' => 'salaire_brut', 'type' => 'number', 'required' => true],
-            ['name' => 'heures_semaine', 'type' => 'number', 'required' => true],
+            ['name' => 'employeur_nom', 'type' => 'text', 'required' => true, 'label' => 'Nom de l\'employeur'],
+            ['name' => 'salarie_nom', 'type' => 'text', 'required' => true, 'label' => 'Nom du salarié'],
+            ['name' => 'poste', 'type' => 'text', 'required' => true, 'label' => 'Poste'],
+            ['name' => 'date_debut', 'type' => 'date', 'required' => true, 'label' => 'Date de début'],
+            ['name' => 'salaire_brut', 'type' => 'number', 'required' => true, 'label' => 'Salaire brut mensuel (€)'],
+            ['name' => 'heures_semaine', 'type' => 'number', 'required' => true, 'label' => 'Heures par semaine'],
+            ['name' => 'periode_essai', 'type' => 'select', 'required' => true, 'label' => 'Période d\'essai', 'options' => ['1 mois', '2 mois', '3 mois', '4 mois']],
         ]);
         $manager->persist($templateTravail);
 
         // ========== DOCUMENTS ==========
 
-        // Document 1 - NDA Draft (il y a 5 mois)
+        // Document 1 - NDA Draft
         $doc1 = new Document();
         $doc1->setTemplate($templateNda);
         $doc1->setOrganization($org1);
-        $doc1->setCreatedBy($admin);
+        $doc1->setCreatedBy($editor);
         $doc1->setStatus(Document::STATUS_DRAFT);
         $doc1->setCreatedAt(new \DateTimeImmutable('-5 months'));
         $doc1->setDataJson([
@@ -295,7 +294,7 @@ MARKDOWN);
         $doc1->setGeneratedContent($this->generateContent($templateNda, $doc1->getDataJson()));
         $manager->persist($doc1);
 
-        // Document 2 - NDA En revue (il y a 4 mois)
+        // Document 2 - NDA En revue
         $doc2 = new Document();
         $doc2->setTemplate($templateNda);
         $doc2->setOrganization($org1);
@@ -319,11 +318,11 @@ MARKDOWN);
         $doc2->setGeneratedContent($this->generateContent($templateNda, $doc2->getDataJson()));
         $manager->persist($doc2);
 
-        // Document 3 - CGV Approuvé (il y a 3 mois)
+        // Document 3 - CGV Approuvé
         $doc3 = new Document();
         $doc3->setTemplate($templateCgv);
         $doc3->setOrganization($org1);
-        $doc3->setCreatedBy($admin);
+        $doc3->setCreatedBy($editor);
         $doc3->setStatus(Document::STATUS_APPROVED);
         $doc3->setCreatedAt(new \DateTimeImmutable('-3 months'));
         $doc3->setDataJson([
@@ -336,16 +335,17 @@ MARKDOWN);
             'prix_ht_ttc' => 'HT',
             'tarif_horaire' => '85',
             'delai_paiement' => '30',
+            'mode_paiement' => 'Virement',
             'date_redaction' => '2025-01-10',
         ]);
         $doc3->setGeneratedContent($this->generateContent($templateCgv, $doc3->getDataJson()));
         $manager->persist($doc3);
 
-        // Document 4 - Contrat SaaS Signé (il y a 2 mois)
+        // Document 4 - Contrat SaaS Signé
         $doc4 = new Document();
         $doc4->setTemplate($templateSaas);
         $doc4->setOrganization($org1);
-        $doc4->setCreatedBy($admin);
+        $doc4->setCreatedBy($editor);
         $doc4->setStatus(Document::STATUS_SIGNED);
         $doc4->setCreatedAt(new \DateTimeImmutable('-2 months'));
         $doc4->setDataJson([
@@ -353,15 +353,16 @@ MARKDOWN);
             'duree_contrat' => '12',
             'date_debut' => '2025-02-01',
             'montant_mensuel' => '299',
+            'mode_paiement' => 'Prélèvement automatique',
         ]);
         $doc4->setGeneratedContent($this->generateContent($templateSaas, $doc4->getDataJson()));
         $manager->persist($doc4);
 
-        // Document 5 - Contrat SaaS Archivé (il y a 1 mois)
+        // Document 5 - Contrat SaaS Archivé
         $doc5 = new Document();
         $doc5->setTemplate($templateSaas);
         $doc5->setOrganization($org1);
-        $doc5->setCreatedBy($admin);
+        $doc5->setCreatedBy($editor);
         $doc5->setStatus(Document::STATUS_ARCHIVED);
         $doc5->setCreatedAt(new \DateTimeImmutable('-1 month'));
         $doc5->setDataJson([
@@ -369,11 +370,12 @@ MARKDOWN);
             'duree_contrat' => '6',
             'date_debut' => '2024-06-01',
             'montant_mensuel' => '199',
+            'mode_paiement' => 'Virement',
         ]);
         $doc5->setGeneratedContent($this->generateContent($templateSaas, $doc5->getDataJson()));
         $manager->persist($doc5);
 
-        // Document 6 - NDA récent (il y a 2 semaines)
+        // Document 6 - NDA récent
         $doc6 = new Document();
         $doc6->setTemplate($templateNda);
         $doc6->setOrganization($org1);
@@ -397,7 +399,7 @@ MARKDOWN);
         $doc6->setGeneratedContent($this->generateContent($templateNda, $doc6->getDataJson()));
         $manager->persist($doc6);
 
-        // Document 7 - CGV récent (il y a 5 jours)
+        // Document 7 - CGV récent
         $doc7 = new Document();
         $doc7->setTemplate($templateCgv);
         $doc7->setOrganization($org1);
@@ -414,6 +416,7 @@ MARKDOWN);
             'prix_ht_ttc' => 'HT',
             'tarif_horaire' => '65',
             'delai_paiement' => '45',
+            'mode_paiement' => 'Chèque',
             'date_redaction' => '2025-12-07',
         ]);
         $doc7->setGeneratedContent($this->generateContent($templateCgv, $doc7->getDataJson()));
@@ -423,7 +426,7 @@ MARKDOWN);
         $doc8 = new Document();
         $doc8->setTemplate($templateSaas);
         $doc8->setOrganization($org1);
-        $doc8->setCreatedBy($admin);
+        $doc8->setCreatedBy($editor);
         $doc8->setStatus(Document::STATUS_DRAFT);
         $doc8->setCreatedAt(new \DateTimeImmutable('now'));
         $doc8->setDataJson([
@@ -431,11 +434,12 @@ MARKDOWN);
             'duree_contrat' => '24',
             'date_debut' => '2026-01-01',
             'montant_mensuel' => '499',
+            'mode_paiement' => 'Carte bancaire',
         ]);
         $doc8->setGeneratedContent($this->generateContent($templateSaas, $doc8->getDataJson()));
         $manager->persist($doc8);
 
-        // Document 9 - Cabinet Martin (il y a 3 mois)
+        // Document 9 - Cabinet Martin
         $doc9 = new Document();
         $doc9->setTemplate($templateTravail);
         $doc9->setOrganization($org2);
@@ -449,11 +453,12 @@ MARKDOWN);
             'date_debut' => '2025-10-01',
             'salaire_brut' => '3500',
             'heures_semaine' => '35',
+            'periode_essai' => '3 mois',
         ]);
         $doc9->setGeneratedContent($this->generateContent($templateTravail, $doc9->getDataJson()));
         $manager->persist($doc9);
 
-        // Document 10 - Cabinet Martin (il y a 1 mois)
+        // Document 10 - Cabinet Martin
         $doc10 = new Document();
         $doc10->setTemplate($templateTravail);
         $doc10->setOrganization($org2);
@@ -467,6 +472,7 @@ MARKDOWN);
             'date_debut' => '2026-01-15',
             'salaire_brut' => '2200',
             'heures_semaine' => '35',
+            'periode_essai' => '2 mois',
         ]);
         $doc10->setGeneratedContent($this->generateContent($templateTravail, $doc10->getDataJson()));
         $manager->persist($doc10);
@@ -492,7 +498,8 @@ MARKDOWN);
                 $value = $formatter->format($date);
             }
 
-            $content = str_replace('{{' . $key . '}}', $value, $content);
+            // Remplacer {{key}}, {{key:type}} et {{key:select:options}}
+            $content = preg_replace('/\{\{' . preg_quote($key, '/') . '(:[^}]+)?\}\}/', $value, $content);
         }
 
         return $content;

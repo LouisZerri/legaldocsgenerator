@@ -6,50 +6,93 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class AiService
 {
-    private string $baseUrl;
+    private string $apiKey;
+    private string $baseUrl = 'https://api.openai.com/v1';
 
     public function __construct(
         private HttpClientInterface $httpClient,
-        string $ollamaHost = 'ollama'
+        string $openaiApiKey = ''
     ) {
-        $this->baseUrl = "http://{$ollamaHost}:11434";
+        $this->apiKey = $openaiApiKey;
     }
 
-    public function generate(string $prompt, string $model = 'tinyllama', int $maxTokens = 2048): ?string
+    public function generate(string $prompt, string $model = 'gpt-4o-mini', int $maxTokens = 2048): ?string
     {
         try {
-            $response = $this->httpClient->request('POST', "{$this->baseUrl}/api/generate", [
+            $response = $this->httpClient->request('POST', "{$this->baseUrl}/chat/completions", [
+                'headers' => [
+                    'Authorization' => "Bearer {$this->apiKey}",
+                    'Content-Type' => 'application/json',
+                ],
                 'json' => [
                     'model' => $model,
-                    'prompt' => $prompt,
-                    'stream' => false,
-                    'options' => [
-                        'num_predict' => $maxTokens,
-                        'temperature' => 0.7,
+                    'messages' => [
+                        ['role' => 'user', 'content' => $prompt]
                     ],
+                    'max_tokens' => $maxTokens,
+                    'temperature' => 0.7,
                 ],
-                'timeout' => 300,
+                'timeout' => 120,
             ]);
 
             $data = $response->toArray();
-            return $data['response'] ?? null;
+            return $data['choices'][0]['message']['content'] ?? null;
         } catch (\Exception $e) {
-            return null;
+            throw new \RuntimeException('Erreur IA: ' . $e->getMessage());
+        }
+    }
+
+    public function chat(string $message, array $history = [], string $systemPrompt = ''): ?string
+    {
+        $messages = [];
+        
+        if ($systemPrompt) {
+            $messages[] = ['role' => 'system', 'content' => $systemPrompt];
+        }
+        
+        foreach ($history as $msg) {
+            $messages[] = [
+                'role' => $msg['role'],
+                'content' => $msg['content']
+            ];
+        }
+        
+        $messages[] = ['role' => 'user', 'content' => $message];
+
+        try {
+            $response = $this->httpClient->request('POST', "{$this->baseUrl}/chat/completions", [
+                'headers' => [
+                    'Authorization' => "Bearer {$this->apiKey}",
+                    'Content-Type' => 'application/json',
+                ],
+                'json' => [
+                    'model' => 'gpt-4o-mini',
+                    'messages' => $messages,
+                    'max_tokens' => 2048,
+                    'temperature' => 0.7,
+                ],
+                'timeout' => 60,
+            ]);
+
+            $data = $response->toArray();
+            return $data['choices'][0]['message']['content'] ?? null;
+        } catch (\Exception $e) {
+            throw new \RuntimeException('Erreur IA: ' . $e->getMessage());
         }
     }
 
     public function improveDocument(string $content, string $tone = 'formel'): ?string
     {
         $prompt = <<<PROMPT
-            Tu es un assistant juridique français expert. Améliore ce document juridique pour le rendre plus {$tone} et professionnel. Garde la même structure. Réponds UNIQUEMENT avec le document amélioré complet.
+Tu es un assistant juridique français expert. Améliore ce document juridique pour le rendre plus {$tone} et professionnel. Garde la même structure.
 
-            Document :
-            {$content}
+Réponds UNIQUEMENT avec le document amélioré complet, en français.
 
-            Document amélioré :
-            PROMPT;
+Document à améliorer :
+{$content}
+PROMPT;
 
-        return $this->generate($prompt, 'tinyllama', 4096);
+        return $this->generate($prompt, 'gpt-4o-mini', 4096);
     }
 
     public function generateClause(string $type, array $context = []): ?string
@@ -60,14 +103,12 @@ class AiService
         }
 
         $prompt = <<<PROMPT
-            Tu es un assistant juridique français. Génère une clause "{$type}" pour un contrat.
-            {$contextStr}
-            Réponds UNIQUEMENT avec la clause, sans explication.
+Tu es un assistant juridique français. Génère une clause "{$type}" pour un contrat français.
+{$contextStr}
+Réponds UNIQUEMENT avec la clause en français, sans explication.
+PROMPT;
 
-            Clause :
-            PROMPT;
-
-        return $this->generate($prompt, 'tinyllama', 1024);
+        return $this->generate($prompt, 'gpt-4o-mini', 1024);
     }
 
     public function reformulate(string $content, string $style): ?string
@@ -81,125 +122,85 @@ class AiService
         };
 
         $prompt = <<<PROMPT
-            Tu es un assistant juridique français. {$styleInstructions}
+Tu es un assistant juridique français. {$styleInstructions}
 
-            Texte original :
-            {$content}
+Texte original :
+{$content}
 
-            Texte reformulé (complet) :
-            PROMPT;
+Texte reformulé en français (complet) :
+PROMPT;
 
-        return $this->generate($prompt, 'tinyllama', 4096);
+        return $this->generate($prompt, 'gpt-4o-mini', 4096);
     }
 
     public function summarize(string $content): ?string
     {
         $prompt = <<<PROMPT
-            Tu es un assistant juridique français. Résume ce document en points clés :
-            - Parties impliquées
-            - Objet du contrat  
-            - Obligations principales
-            - Durée et conditions
+Tu es un assistant juridique français. Résume ce document en points clés :
+- Parties impliquées
+- Objet du contrat  
+- Obligations principales
+- Durée et conditions
 
-            Document :
-            {$content}
+Document :
+{$content}
 
-            Résumé structuré :
-            PROMPT;
+Résumé structuré en français :
+PROMPT;
 
-        return $this->generate($prompt, 'tinyllama', 1024);
+        return $this->generate($prompt, 'gpt-4o-mini', 1024);
     }
 
     public function checkCompliance(string $content): ?string
     {
         $prompt = <<<PROMPT
-            Tu es un juriste français. Analyse ce document et liste :
-            1. Clauses manquantes importantes
-            2. Formulations à améliorer
-            3. Points d'attention juridiques
+Tu es un juriste français. Analyse ce document et liste :
+1. Clauses manquantes importantes
+2. Formulations à améliorer
+3. Points d'attention juridiques
 
-            Document :
-            {$content}
+Document :
+{$content}
 
-            Analyse :
-            PROMPT;
+Analyse en français :
+PROMPT;
 
-        return $this->generate($prompt, 'tinyllama', 1024);
+        return $this->generate($prompt, 'gpt-4o-mini', 1024);
     }
 
     public function isAvailable(): bool
     {
-        try {
-            $response = $this->httpClient->request('GET', "{$this->baseUrl}/api/tags", [
-                'timeout' => 5,
-            ]);
-            return $response->getStatusCode() === 200;
-        } catch (\Exception $e) {
-            return false;
-        }
+        return !empty($this->apiKey);
     }
 
-    public function generateStream(string $prompt, string $model = 'mistral', int $maxTokens = 2048): \Generator
+    public function generateStream(string $prompt, string $model = 'gpt-4o-mini', int $maxTokens = 2048): \Generator
     {
-        $ch = curl_init();
-
-        curl_setopt_array($ch, [
-            CURLOPT_URL => "{$this->baseUrl}/api/generate",
-            CURLOPT_POST => true,
-            CURLOPT_POSTFIELDS => json_encode([
+        $response = $this->httpClient->request('POST', "{$this->baseUrl}/chat/completions", [
+            'headers' => [
+                'Authorization' => "Bearer {$this->apiKey}",
+                'Content-Type' => 'application/json',
+            ],
+            'json' => [
                 'model' => $model,
-                'prompt' => $prompt,
-                'stream' => true,
-                'options' => [
-                    'num_predict' => $maxTokens,
-                    'temperature' => 0.7,
+                'messages' => [
+                    ['role' => 'user', 'content' => $prompt]
                 ],
-            ]),
-            CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
-            CURLOPT_RETURNTRANSFER => false,
-            CURLOPT_WRITEFUNCTION => function ($ch, $data) use (&$buffer) {
-                $buffer .= $data;
-                return strlen($data);
-            },
-            CURLOPT_TIMEOUT => 300,
-        ]);
-
-        $buffer = '';
-
-        // On utilise une approche différente avec file_get_contents et stream context
-        $context = stream_context_create([
-            'http' => [
-                'method' => 'POST',
-                'header' => "Content-Type: application/json\r\n",
-                'content' => json_encode([
-                    'model' => $model,
-                    'prompt' => $prompt,
-                    'stream' => true,
-                    'options' => [
-                        'num_predict' => $maxTokens,
-                        'temperature' => 0.7,
-                    ],
-                ]),
-                'timeout' => 300,
+                'max_tokens' => $maxTokens,
+                'temperature' => 0.7,
+                'stream' => true,
             ],
         ]);
 
-        $stream = fopen("{$this->baseUrl}/api/generate", 'r', false, $context);
-
-        if ($stream) {
-            while (!feof($stream)) {
-                $line = fgets($stream);
-                if ($line) {
-                    $json = json_decode($line, true);
-                    if (isset($json['response'])) {
-                        yield $json['response'];
-                    }
-                    if (isset($json['done']) && $json['done']) {
-                        break;
+        foreach ($this->httpClient->stream($response) as $chunk) {
+            $content = $chunk->getContent();
+            foreach (explode("\n", $content) as $line) {
+                if (str_starts_with($line, 'data: ') && $line !== 'data: [DONE]') {
+                    $json = json_decode(substr($line, 6), true);
+                    if (isset($json['choices'][0]['delta']['content'])) {
+                        yield $json['choices'][0]['delta']['content'];
                     }
                 }
             }
-            fclose($stream);
         }
     }
 }

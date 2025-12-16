@@ -1,5 +1,4 @@
 services:
-  # PHP 8.3 + Apache
   app:
     build:
       context: .
@@ -20,10 +19,10 @@ services:
       - DATABASE_URL=postgresql://legaldocs:legaldocs@database:5432/legaldocs?serverVersion=16&charset=utf8
       - REDIS_URL=redis://redis:6379
       - MESSENGER_TRANSPORT_DSN=amqp://guest:guest@rabbitmq:5672/%2f/messages
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
     networks:
       - legaldocs_network
 
-  # PostgreSQL + pgvector
   database:
     image: pgvector/pgvector:pg16
     container_name: legaldocs_db
@@ -39,7 +38,6 @@ services:
     networks:
       - legaldocs_network
 
-  # Redis
   redis:
     image: redis:7-alpine
     container_name: legaldocs_redis
@@ -51,7 +49,6 @@ services:
     networks:
       - legaldocs_network
 
-  # RabbitMQ
   rabbitmq:
     image: rabbitmq:3-management-alpine
     container_name: legaldocs_rabbitmq
@@ -67,19 +64,6 @@ services:
     networks:
       - legaldocs_network
 
-  # Ollama pour l'IA
-  ollama:
-    image: ollama/ollama:latest
-    container_name: legaldocs_ollama
-    restart: unless-stopped
-    ports:
-      - "11434:11434"
-    volumes:
-      - ollama_data:/root/.ollama
-    networks:
-      - legaldocs_network
-
-  # Worker Messenger
   worker:
     build:
       context: .
@@ -98,15 +82,14 @@ services:
       - DATABASE_URL=postgresql://legaldocs:legaldocs@database:5432/legaldocs?serverVersion=16&charset=utf8
       - REDIS_URL=redis://redis:6379
       - MESSENGER_TRANSPORT_DSN=amqp://guest:guest@rabbitmq:5672/%2f/messages
-      - OLLAMA_HOST=ollama
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
     networks:
       - legaldocs_network
-      
+
 volumes:
   postgres_data:
   redis_data:
   rabbitmq_data:
-  ollama_data:
 
 networks:
   legaldocs_network:
